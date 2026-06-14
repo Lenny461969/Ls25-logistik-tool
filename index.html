@@ -1948,7 +1948,7 @@ function clearSession(){sessionStorage.removeItem('ls25_sess');currentUser=null}
 const OWK='ls25_owner';
 function getOwner(){const r=localStorage.getItem(OWK);if(!r)return null;try{return JSON.parse(xorCrypt(r,false))}catch{return null}}
 function saveOwner(d){localStorage.setItem(OWK,xorCrypt(JSON.stringify(d),true))}
-async function initOwner(){if(!getOwner()){const h=await hashPassword('p8~2c-CH6e_u+jZ!');saveOwner({username:'Noxie',passwordHash:h,created:new Date().toISOString()})}}
+async function initOwner(){if(!getOwner()){const h=await hashPassword('p8~2c-CH6e_u+jZ');saveOwner({username:'Noxie',passwordHash:h,created:new Date().toISOString()})}}
 
 function switchAuthTab(tab,el){
   document.querySelectorAll('.auth-tab').forEach(t=>t.classList.remove('active'));
@@ -1964,9 +1964,9 @@ async function doLogin(){
   const pw=document.getElementById('login-pass').value;
   if(!ui||!pw){showAuthErr('Bitte alle Felder ausfullen.');return}
   const owner=getOwner();
-  if(ui==='owner'||ui===owner?.username){
+  if(ui===owner?.username){
     const h=await hashPassword(pw);
-    if(h===owner.passwordHash){setSession({username:'owner',email:'owner@ls25.local',farmname:'INHABER',isOwner:true,avatar:'I',loginMethod:'manual'});startApp();return}
+    if(h===owner.passwordHash){setSession({username:owner.username,email:'owner@ls25.local',farmname:'INHABER',isOwner:true,avatar:'N',loginMethod:'manual'});startApp();return}
     showAuthErr('Falsches Passwort.');return;
   }
   const users=getUsers();
@@ -1989,7 +1989,7 @@ async function doRegister(){
   if(pw.length<6){showAuthErr('Passwort mind. 6 Zeichen.');return}
   if(pw!==pw2){showAuthErr('Passworter stimmen nicht uberein.');return}
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){showAuthErr('Ungultige E-Mail.');return}
-  if(username==='owner'){showAuthErr('Benutzername reserviert.');return}
+  if(username.toLowerCase()==='noxie'){showAuthErr('Benutzername reserviert.');return}
   const users=getUsers();
   if(Object.values(users).find(u=>u.username===username)){showAuthErr('Benutzername vergeben.');return}
   if(Object.values(users).find(u=>u.email===email)){showAuthErr('E-Mail bereits registriert.');return}
