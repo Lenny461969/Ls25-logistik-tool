@@ -1948,7 +1948,7 @@ function clearSession(){sessionStorage.removeItem('ls25_sess');currentUser=null}
 const OWK='ls25_owner';
 function getOwner(){const r=localStorage.getItem(OWK);if(!r)return null;try{return JSON.parse(xorCrypt(r,false))}catch{return null}}
 function saveOwner(d){localStorage.setItem(OWK,xorCrypt(JSON.stringify(d),true))}
-async function initOwner(){if(!getOwner()){const h=await hashPassword('p8~2c-CH6e_u+jZ!');saveOwner({username:'owner',passwordHash:h,created:new Date().toISOString()})}}
+async function initOwner(){if(!getOwner()){const h=await hashPassword('p8~2c-CH6e_u+jZ!');saveOwner({username:'Noxie',passwordHash:h,created:new Date().toISOString()})}}
 
 function switchAuthTab(tab,el){
   document.querySelectorAll('.auth-tab').forEach(t=>t.classList.remove('active'));
