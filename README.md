@@ -1,2 +1,1791 @@
-# Ls25-logistik-tool
-Ls25 logistik tool
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LS25 Farm Manager</title>
+<style>
+  :root {
+    --bg: #0e1a0e;
+    --bg2: #152415;
+    --bg3: #1e321e;
+    --card: #192619;
+    --border: #2d4a2d;
+    --green: #4a7c3f;
+    --green-light: #6aad5a;
+    --gold: #c8a951;
+    --gold-light: #e0c46a;
+    --text: #e8e0cc;
+    --text-dim: #8a9e82;
+    --red: #c0392b;
+    --blue: #2e86ab;
+    --orange: #d4851a;
+    --radius: 8px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.5);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+
+  /* ── HEADER ── */
+  header {
+    background: linear-gradient(135deg, #0a140a 0%, #1a2e1a 60%, #0f1f0f 100%);
+    border-bottom: 2px solid var(--gold);
+    padding: 0 24px;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 62px; position: sticky; top: 0; z-index: 100;
+  }
+  .logo { display: flex; align-items: center; gap: 12px; }
+  .logo-icon { font-size: 28px; }
+  .logo-text { font-size: 20px; font-weight: 700; color: var(--gold); letter-spacing: 1px; }
+  .logo-sub { font-size: 11px; color: var(--text-dim); margin-top: 1px; }
+  .header-info { display: flex; gap: 20px; align-items: center; }
+  .hinfo { text-align: right; }
+  .hinfo-val { font-size: 18px; font-weight: 700; color: var(--green-light); }
+  .hinfo-lbl { font-size: 10px; color: var(--text-dim); }
+
+  /* ── NAV ── */
+  nav {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    display: flex; overflow-x: auto; padding: 0 16px;
+    scrollbar-width: none;
+  }
+  nav::-webkit-scrollbar { display: none; }
+  .nav-btn {
+    flex-shrink: 0; padding: 14px 20px; background: none; border: none;
+    color: var(--text-dim); cursor: pointer; font-size: 13px; font-weight: 600;
+    border-bottom: 3px solid transparent; transition: all .2s; white-space: nowrap;
+    display: flex; align-items: center; gap: 7px;
+  }
+  .nav-btn:hover { color: var(--text); }
+  .nav-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+  /* ── LAYOUT ── */
+  .page { display: none; padding: 24px; max-width: 1400px; margin: 0 auto; animation: fadeIn .25s; }
+  .page.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+  }
+  .card-title { font-size: 14px; font-weight: 700; color: var(--gold); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .grid4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; }
+  @media(max-width:900px) { .grid4 { grid-template-columns:1fr 1fr; } .grid3 { grid-template-columns:1fr 1fr; } }
+  @media(max-width:600px) { .grid2,.grid3,.grid4 { grid-template-columns:1fr; } }
+
+  /* ── STAT BOXES ── */
+  .stat { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+  .stat-val { font-size: 26px; font-weight: 800; color: var(--green-light); }
+  .stat-lbl { font-size: 11px; color: var(--text-dim); margin-top: 3px; }
+  .stat-sub { font-size: 12px; color: var(--gold); margin-top: 4px; }
+
+  /* ── INPUTS / BUTTONS ── */
+  input, select, textarea {
+    background: var(--bg3); border: 1px solid var(--border); color: var(--text);
+    padding: 9px 12px; border-radius: 6px; font-size: 13px; width: 100%;
+    transition: border-color .2s;
+  }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--green); }
+  .btn {
+    padding: 10px 18px; border-radius: 6px; border: none; cursor: pointer;
+    font-size: 13px; font-weight: 600; transition: all .15s; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-green { background: var(--green); color: #fff; }
+  .btn-green:hover { background: var(--green-light); }
+  .btn-gold { background: var(--gold); color: #0e1a0e; }
+  .btn-gold:hover { background: var(--gold-light); }
+  .btn-red { background: var(--red); color: #fff; }
+  .btn-red:hover { background: #e74c3c; }
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  .btn-outline:hover { border-color: var(--green); color: var(--green-light); }
+
+  /* ── FORM ROWS ── */
+  .form-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+  .form-row > * { flex: 1; min-width: 140px; }
+  .form-label { font-size: 11px; color: var(--text-dim); margin-bottom: 5px; display: block; }
+
+  /* ── TABLES ── */
+  .tbl-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { background: var(--bg3); color: var(--gold); padding: 10px 12px; text-align: left; font-size: 11px; letter-spacing:.5px; text-transform: uppercase; }
+  td { padding: 10px 12px; border-top: 1px solid var(--border); vertical-align: middle; }
+  tr:hover td { background: rgba(74,124,63,.08); }
+  .badge {
+    display: inline-flex; align-items: center; padding: 3px 8px;
+    border-radius: 20px; font-size: 11px; font-weight: 600;
+  }
+  .badge-green { background: rgba(74,124,63,.25); color: var(--green-light); }
+  .badge-gold { background: rgba(200,169,81,.2); color: var(--gold); }
+  .badge-red { background: rgba(192,57,43,.25); color: #e74c3c; }
+  .badge-blue { background: rgba(46,134,171,.25); color: #5dade2; }
+  .badge-orange { background: rgba(212,133,26,.25); color: #f0a500; }
+
+  /* ── FRUCHTFOLGE GRID ── */
+  .ff-grid { display: grid; gap: 2px; margin-top: 12px; }
+  .ff-cell {
+    border-radius: 4px; height: 48px; display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; cursor: pointer; transition: all .15s; position: relative;
+    border: 2px solid transparent; text-align: center; padding: 2px;
+  }
+  .ff-cell:hover { filter: brightness(1.2); border-color: var(--gold); }
+  .ff-cell.selected { border-color: var(--gold-light); box-shadow: 0 0 0 2px var(--gold); }
+  .ff-header-row { font-size: 11px; color: var(--text-dim); display: flex; gap: 2px; margin-bottom: 2px; padding-left: 72px; }
+  .ff-header-cell { flex: 1; text-align: center; padding: 4px; }
+  .ff-row { display: flex; gap: 2px; align-items: center; }
+  .ff-row-label { width: 70px; flex-shrink: 0; font-size: 12px; color: var(--text-dim); padding-right: 4px; text-align: right; }
+  .ff-row-cells { display: flex; gap: 2px; flex: 1; }
+  .ff-row-cells .ff-cell { flex: 1; }
+
+  /* ── COLLI / LAGER ── */
+  .colli-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap: 12px; margin-top: 12px; }
+  .colli-card {
+    background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px;
+    cursor: pointer; transition: all .2s; position: relative;
+  }
+  .colli-card:hover { border-color: var(--green); }
+  .colli-name { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+  .colli-detail { font-size: 12px; color: var(--text-dim); }
+  .colli-qty { font-size: 20px; font-weight: 800; color: var(--gold); margin: 8px 0 4px; }
+  .colli-bar-wrap { height: 4px; background: var(--border); border-radius: 2px; margin-top: 6px; }
+  .colli-bar { height: 100%; border-radius: 2px; background: var(--green); transition: width .4s; }
+
+  /* ── SCANNER ── */
+  .scanner-box {
+    border: 2px dashed var(--border); border-radius: var(--radius); padding: 40px 20px;
+    text-align: center; color: var(--text-dim); transition: all .2s; cursor: pointer;
+  }
+  .scanner-box:hover { border-color: var(--green); color: var(--green-light); }
+  .scanner-icon { font-size: 48px; margin-bottom: 12px; }
+  .scan-result { background: var(--bg3); border: 1px solid var(--green); border-radius: var(--radius); padding: 16px; margin-top: 16px; animation: fadeIn .3s; }
+
+  /* ── FINANCE ── */
+  .fin-positive { color: var(--green-light); }
+  .fin-negative { color: #e74c3c; }
+  .progress-bar { height: 8px; background: var(--border); border-radius: 4px; margin-top: 6px; }
+  .progress-fill { height: 100%; border-radius: 4px; transition: width .4s; }
+
+  /* ── TOAST ── */
+  #toast {
+    position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+    background: var(--green); color: #fff; padding: 12px 20px; border-radius: 8px;
+    font-size: 13px; font-weight: 600; opacity: 0; transform: translateY(10px);
+    transition: all .3s; pointer-events: none; max-width: 320px;
+  }
+  #toast.show { opacity: 1; transform: none; }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 500;
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 24px; min-width: 320px; max-width: 500px; width: 90%; box-shadow: var(--shadow);
+    animation: fadeIn .2s;
+  }
+  .modal-title { font-size: 16px; font-weight: 700; color: var(--gold); margin-bottom: 16px; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+  /* ── MISC ── */
+  .divider { height: 1px; background: var(--border); margin: 20px 0; }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; background: var(--bg3); border: 1px solid var(--border); margin: 2px; }
+  .empty-state { text-align: center; padding: 40px; color: var(--text-dim); }
+  .flex-end { display: flex; justify-content: flex-end; gap: 8px; }
+  .mb { margin-bottom: 16px; }
+  .gap-top { margin-top: 16px; }
+
+  /* Section header */
+  .section-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .section-hd h2 { font-size: 16px; font-weight: 700; color: var(--text); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <span class="logo-icon">🌾</span>
+    <div>
+      <div class="logo-text">LS25 FARM MANAGER</div>
+      <div class="logo-sub">Verwaltung · Logistik · Planung</div>
+    </div>
+  </div>
+  <div class="header-info">
+    <div class="hinfo">
+      <div class="hinfo-val" id="hdr-cash">€ 0</div>
+      <div class="hinfo-lbl">Kontostand</div>
+    </div>
+    <div class="hinfo">
+      <div class="hinfo-val" id="hdr-year">Jahr 1</div>
+      <div class="hinfo-lbl">Spieljahr</div>
+    </div>
+    <div class="hinfo">
+      <div class="hinfo-val" id="hdr-season">Frühling</div>
+      <div class="hinfo-lbl">Jahreszeit</div>
+    </div>
+  </div>
+</header>
+
+<nav>
+  <button class="nav-btn active" onclick="showPage('dashboard')">📊 Dashboard</button>
+  <button class="nav-btn" onclick="showPage('fruchtfolge')">🌱 Fruchtfolge</button>
+  <button class="nav-btn" onclick="showPage('felder')">🗺️ Felder</button>
+  <button class="nav-btn" onclick="showPage('lager')">📦 Lager & Stellplätze</button>
+  <button class="nav-btn" onclick="showPage('collis')">🏷️ Collis</button>
+  <button class="nav-btn" onclick="showPage('scanner')">📷 Scanner</button>
+  <button class="nav-btn" onclick="showPage('statistik')">📈 Statistik</button>
+  <button class="nav-btn" onclick="showPage('finanzen')">💰 Finanzen</button>
+  <button class="nav-btn" onclick="showPage('einstellungen')">⚙️ Einstellungen</button>
+</nav>
+
+<!-- ═══════════════════════════════════════ DASHBOARD ═══════════════════════════════════════ -->
+<div id="page-dashboard" class="page active">
+  <div class="grid4 mb">
+    <div class="stat"><div class="stat-val" id="dash-felder">0</div><div class="stat-lbl">Felder gesamt</div><div class="stat-sub" id="dash-ha">0 ha</div></div>
+    <div class="stat"><div class="stat-val" id="dash-collis">0</div><div class="stat-lbl">Aktive Collis</div><div class="stat-sub" id="dash-colli-wert">0 Einheiten</div></div>
+    <div class="stat"><div class="stat-val" id="dash-lager">0</div><div class="stat-lbl">Lagerplätze</div><div class="stat-sub" id="dash-lager-fill">0% belegt</div></div>
+    <div class="stat"><div class="stat-val fin-positive" id="dash-gewinn">€0</div><div class="stat-lbl">Jahresgewinn</div><div class="stat-sub" id="dash-umsatz">Umsatz €0</div></div>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">🌾 Aktuelle Ernte / Anbau</div>
+      <div id="dash-ernte-list">
+        <div class="empty-state">Noch keine Felddaten. Felder anlegen →</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">📋 Letzte Aktivitäten</div>
+      <div id="dash-aktivitaeten">
+        <div class="empty-state">Keine Aktivitäten</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="gap-top grid3">
+    <div class="card">
+      <div class="card-title">⚠️ Warnungen & Hinweise</div>
+      <div id="dash-warnings">
+        <div class="empty-state">Alles in Ordnung ✓</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">📦 Lager-Übersicht</div>
+      <div id="dash-lager-ov">
+        <div class="empty-state">Keine Lagerdaten</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">💰 Finanz-Schnellblick</div>
+      <div id="dash-fin-quick">
+        <div class="empty-state">Keine Transaktionen</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ FRUCHTFOLGE ═══════════════════════════════════════ -->
+<div id="page-fruchtfolge" class="page">
+  <div class="section-hd">
+    <h2>🌱 Fruchtfolge-Planer</h2>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-outline btn-sm" onclick="exportFF()">📤 Export</button>
+      <button class="btn btn-green btn-sm" onclick="openModal('modal-ff-feld')">+ Feld hinzufügen</button>
+    </div>
+  </div>
+
+  <div class="card mb">
+    <div class="card-title">📐 Fruchtfolge-Matrix</div>
+    <div class="form-row" style="margin-bottom:12px;">
+      <div>
+        <label class="form-label">Jahre anzeigen</label>
+        <select id="ff-years" onchange="renderFF()">
+          <option value="4">4 Jahre</option>
+          <option value="6" selected>6 Jahre</option>
+          <option value="8">8 Jahre</option>
+        </select>
+      </div>
+      <div>
+        <label class="form-label">Startjahr</label>
+        <input type="number" id="ff-startyear" value="1" min="1" max="100" onchange="renderFF()">
+      </div>
+      <div style="align-self:flex-end;">
+        <button class="btn btn-gold btn-sm" onclick="autoFill()">🔮 Auto-Empfehlung</button>
+      </div>
+    </div>
+    <div id="ff-matrix-wrap">
+      <div class="empty-state">Füge zuerst Felder hinzu.</div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">🌿 Frucht-Legende</div>
+      <div id="ff-legend" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">💡 Empfohlene Folgen</div>
+      <div style="font-size:12px;color:var(--text-dim);line-height:1.8;">
+        <b style="color:var(--gold)">Weizen-Raps-Rüben:</b> Klassische 3-Feld-Rotation<br>
+        <b style="color:var(--gold)">Mais-Weizen-Gerste:</b> Getreide-Mais-Wechsel<br>
+        <b style="color:var(--gold)">Raps-Weizen-Gerste-Roggen:</b> 4-Frucht-Rotation<br>
+        <b style="color:var(--gold)">Kartoffel-Weizen-Raps:</b> Knollen-Intensiv<br>
+        <b style="color:var(--gold)">Sonnenblume-Mais-Weizen:</b> Süd-Rotation<br>
+        <b style="color:var(--gold)">Sojabohne-Mais-Weizen:</b> Stickstoffbindend
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ FELDER ═══════════════════════════════════════ -->
+<div id="page-felder" class="page">
+  <div class="section-hd">
+    <h2>🗺️ Feld-Verwaltung</h2>
+    <button class="btn btn-green" onclick="openModal('modal-feld')">+ Neues Feld</button>
+  </div>
+  <div class="card">
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>Nr.</th><th>Name</th><th>Größe (ha)</th><th>Frucht aktuell</th><th>Status</th><th>Dünger</th><th>Ertrag/ha</th><th>Aktionen</th>
+        </tr></thead>
+        <tbody id="felder-tbody">
+          <tr><td colspan="8" class="empty-state">Keine Felder angelegt.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ LAGER ═══════════════════════════════════════ -->
+<div id="page-lager" class="page">
+  <div class="section-hd">
+    <h2>📦 Lager & Stellplätze</h2>
+    <button class="btn btn-green" onclick="openModal('modal-lager')">+ Stellplatz anlegen</button>
+  </div>
+
+  <div class="grid4 mb">
+    <div class="stat"><div class="stat-val" id="lager-total">0</div><div class="stat-lbl">Stellplätze</div></div>
+    <div class="stat"><div class="stat-val" id="lager-cap">0</div><div class="stat-lbl">Gesamtkapazität</div></div>
+    <div class="stat"><div class="stat-val" id="lager-used">0</div><div class="stat-lbl">Belegt</div></div>
+    <div class="stat"><div class="stat-val" id="lager-pct">0%</div><div class="stat-lbl">Auslastung</div></div>
+  </div>
+
+  <div id="lager-grid" class="colli-grid">
+    <div class="empty-state" style="grid-column:1/-1">Keine Stellplätze angelegt.</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ COLLIS ═══════════════════════════════════════ -->
+<div id="page-collis" class="page">
+  <div class="section-hd">
+    <h2>🏷️ Colli-Verwaltung</h2>
+    <button class="btn btn-green" onclick="openModal('modal-colli')">+ Colli anlegen</button>
+  </div>
+
+  <div class="grid4 mb">
+    <div class="stat"><div class="stat-val" id="colli-total">0</div><div class="stat-lbl">Collis gesamt</div></div>
+    <div class="stat"><div class="stat-val" id="colli-aktiv">0</div><div class="stat-lbl">Aktiv / Unterwegs</div></div>
+    <div class="stat"><div class="stat-val" id="colli-gelagert">0</div><div class="stat-lbl">Gelagert</div></div>
+    <div class="stat"><div class="stat-val" id="colli-geliefert">0</div><div class="stat-lbl">Geliefert</div></div>
+  </div>
+
+  <div class="card mb">
+    <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
+      <input type="text" id="colli-search" placeholder="🔍 Colli suchen..." oninput="renderCollis()" style="max-width:280px;">
+      <select id="colli-filter" onchange="renderCollis()">
+        <option value="">Alle Status</option>
+        <option value="gelagert">Gelagert</option>
+        <option value="unterwegs">Unterwegs</option>
+        <option value="geliefert">Geliefert</option>
+      </select>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>Colli-ID</th><th>Produkt</th><th>Menge</th><th>Einheit</th><th>Von</th><th>Nach</th><th>Status</th><th>Erstellt</th><th>Aktionen</th>
+        </tr></thead>
+        <tbody id="collis-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ SCANNER ═══════════════════════════════════════ -->
+<div id="page-scanner" class="page">
+  <div class="section-hd"><h2>📷 Produkt-Scanner</h2></div>
+
+  <div class="grid2">
+    <div>
+      <div class="card mb">
+        <div class="card-title">🔤 Manuelle Eingabe / Scan</div>
+        <div class="form-row">
+          <div>
+            <label class="form-label">Colli-ID oder Produkt</label>
+            <input type="text" id="scan-input" placeholder="ID eingeben oder scannen..." onkeyup="if(event.key==='Enter') doScan()">
+          </div>
+        </div>
+        <div class="form-row">
+          <div>
+            <label class="form-label">Produkt</label>
+            <select id="scan-produkt">
+              <option value="">-- Produkt wählen --</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Menge</label>
+            <input type="number" id="scan-menge" placeholder="0" min="0">
+          </div>
+          <div>
+            <label class="form-label">Einheit</label>
+            <select id="scan-einheit">
+              <option>t</option><option>l</option><option>kg</option><option>Stück</option><option>Palette</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div>
+            <label class="form-label">Lagerplatz</label>
+            <select id="scan-lager"></select>
+          </div>
+          <div>
+            <label class="form-label">Aktion</label>
+            <select id="scan-aktion">
+              <option value="einlagern">📥 Einlagern</option>
+              <option value="auslagern">📤 Auslagern</option>
+              <option value="inventur">🔢 Inventur</option>
+              <option value="colli">🏷️ Colli erstellen</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-green" onclick="doScan()" style="width:100%">📷 Erfassen</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">⚡ Schnell-Scan (Barcode-Modus)</div>
+        <div class="scanner-box" onclick="activateBarcode()">
+          <div class="scanner-icon">▦</div>
+          <div>Klicke hier, dann Barcode scannen</div>
+          <div style="font-size:11px;margin-top:6px;color:var(--text-dim)">USB-Scanner oder Tastatur-Input</div>
+        </div>
+        <div id="barcode-status" style="font-size:12px;color:var(--text-dim);margin-top:8px;text-align:center;"></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card mb">
+        <div class="card-title">📋 Scan-Log (heute)</div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Zeit</th><th>Produkt</th><th>Menge</th><th>Aktion</th><th>Lager</th></tr></thead>
+            <tbody id="scan-log"></tbody>
+          </table>
+        </div>
+        <div id="scan-log-empty" class="empty-state">Noch keine Scans heute.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">📊 Heutige Zusammenfassung</div>
+        <div id="scan-summary">
+          <div class="empty-state">Keine Scans</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ STATISTIK ═══════════════════════════════════════ -->
+<div id="page-statistik" class="page">
+  <div class="section-hd"><h2>📈 Statistiken & Auswertungen</h2>
+    <select id="stats-year" onchange="renderStats()">
+      <option value="all">Alle Jahre</option>
+      <option value="1">Jahr 1</option>
+    </select>
+  </div>
+
+  <div class="grid4 mb">
+    <div class="stat"><div class="stat-val" id="s-umsatz">€0</div><div class="stat-lbl">Gesamtumsatz</div></div>
+    <div class="stat"><div class="stat-val" id="s-kosten">€0</div><div class="stat-lbl">Gesamtkosten</div></div>
+    <div class="stat"><div class="stat-val fin-positive" id="s-gewinn">€0</div><div class="stat-lbl">Gewinn</div></div>
+    <div class="stat"><div class="stat-val" id="s-ernte">0 t</div><div class="stat-lbl">Gesamternte</div></div>
+  </div>
+
+  <div class="grid2 mb">
+    <div class="card">
+      <div class="card-title">🌾 Top-Früchte nach Ertrag</div>
+      <div id="stats-fruechte"><div class="empty-state">Keine Daten</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">💰 Einnahmen nach Kategorie</div>
+      <div id="stats-einnahmen"><div class="empty-state">Keine Daten</div></div>
+    </div>
+  </div>
+
+  <div class="grid2 mb">
+    <div class="card">
+      <div class="card-title">📦 Lager-Durchsatz</div>
+      <div id="stats-lager"><div class="empty-state">Keine Lagerbewegungen</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">🗺️ Feld-Performance</div>
+      <div id="stats-felder"><div class="empty-state">Keine Felddaten</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📅 Monatliche Finanz-Übersicht</div>
+    <div id="stats-monat"><div class="empty-state">Keine Transaktionen</div></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ FINANZEN ═══════════════════════════════════════ -->
+<div id="page-finanzen" class="page">
+  <div class="section-hd">
+    <h2>💰 Finanz-Manager</h2>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-outline btn-sm" onclick="exportFinanzen()">📤 Export CSV</button>
+      <button class="btn btn-green" onclick="openModal('modal-transaktion')">+ Buchung</button>
+    </div>
+  </div>
+
+  <div class="grid4 mb">
+    <div class="stat"><div class="stat-val fin-positive" id="fin-konto">€0</div><div class="stat-lbl">Kontostand</div></div>
+    <div class="stat"><div class="stat-val fin-positive" id="fin-einnahmen">€0</div><div class="stat-lbl">Einnahmen (Jahm)</div></div>
+    <div class="stat"><div class="stat-val fin-negative" id="fin-ausgaben">€0</div><div class="stat-lbl">Ausgaben (Jahr)</div></div>
+    <div class="stat"><div class="stat-val" id="fin-gewinnmarge">0%</div><div class="stat-lbl">Gewinnmarge</div></div>
+  </div>
+
+  <div class="grid2 mb">
+    <div class="card">
+      <div class="card-title">🏦 Kredite & Darlehen</div>
+      <div id="fin-kredite">
+        <div class="empty-state">Keine Kredite</div>
+      </div>
+      <div style="margin-top:12px;">
+        <button class="btn btn-outline btn-sm" onclick="openModal('modal-kredit')">+ Kredit aufnehmen</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">🔄 Wiederkehrende Kosten</div>
+      <div id="fin-wiederk">
+        <div class="empty-state">Keine wiederkehrenden Kosten</div>
+      </div>
+      <div style="margin-top:12px;">
+        <button class="btn btn-outline btn-sm" onclick="openModal('modal-wiederk')">+ Dauerkosten</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📋 Buchungsliste</div>
+    <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
+      <input type="text" id="fin-search" placeholder="🔍 Buchung suchen..." oninput="renderTransaktionen()" style="max-width:240px;">
+      <select id="fin-filter-typ" onchange="renderTransaktionen()">
+        <option value="">Alle Typen</option>
+        <option value="einnahme">Einnahmen</option>
+        <option value="ausgabe">Ausgaben</option>
+      </select>
+      <select id="fin-filter-kat" onchange="renderTransaktionen()">
+        <option value="">Alle Kategorien</option>
+        <option>Ernte</option><option>Saatgut</option><option>Dünger</option><option>Maschinen</option>
+        <option>Treibstoff</option><option>Kredit</option><option>Sonstiges</option>
+      </select>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Datum</th><th>Beschreibung</th><th>Kategorie</th><th>Typ</th><th>Betrag</th><th>Saldo</th><th>Aktionen</th></tr></thead>
+        <tbody id="fin-tbody"></tbody>
+      </table>
+    </div>
+    <div id="fin-empty" class="empty-state">Keine Buchungen.</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ EINSTELLUNGEN ═══════════════════════════════════════ -->
+<div id="page-einstellungen" class="page">
+  <div class="section-hd"><h2>⚙️ Einstellungen</h2></div>
+  <div class="grid2">
+    <div class="card mb">
+      <div class="card-title">🎮 Spiel-Einstellungen</div>
+      <div class="form-row"><div>
+        <label class="form-label">Spieler-Name / Hofname</label>
+        <input type="text" id="set-farmname" placeholder="Mein Hof" oninput="saveSettings()">
+      </div></div>
+      <div class="form-row">
+        <div>
+          <label class="form-label">Aktuelles Spieljahr</label>
+          <input type="number" id="set-year" value="1" min="1" oninput="saveSettings();updateHeader()">
+        </div>
+        <div>
+          <label class="form-label">Jahreszeit</label>
+          <select id="set-season" onchange="saveSettings();updateHeader()">
+            <option>Frühling</option><option>Sommer</option><option>Herbst</option><option>Winter</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row"><div>
+        <label class="form-label">Startkapital / aktueller Kontostand (€)</label>
+        <input type="number" id="set-cash" value="0" oninput="saveSettings();updateHeader()">
+      </div></div>
+    </div>
+
+    <div class="card mb">
+      <div class="card-title">🌾 Frucht-Verwaltung</div>
+      <div id="frucht-liste" style="margin-bottom:10px;display:flex;flex-wrap:wrap;gap:6px;"></div>
+      <div class="form-row">
+        <div><input type="text" id="new-frucht-name" placeholder="Frucht-Name"></div>
+        <div><input type="color" id="new-frucht-color" value="#4a7c3f" style="width:100%;padding:4px;height:38px;"></div>
+        <div style="align-self:flex-end;"><button class="btn btn-green" onclick="addFrucht()">+ Hinzufügen</button></div>
+      </div>
+    </div>
+
+    <div class="card mb">
+      <div class="card-title">📦 Produkt-Katalog</div>
+      <div id="produkt-liste" style="margin-bottom:10px;"></div>
+      <div class="form-row">
+        <div><input type="text" id="new-prod-name" placeholder="Produkt-Name"></div>
+        <div><input type="number" id="new-prod-preis" placeholder="Preis/t (€)" min="0"></div>
+        <div style="align-self:flex-end;"><button class="btn btn-green" onclick="addProdukt()">+ Hinzufügen</button></div>
+      </div>
+    </div>
+
+    <div class="card mb">
+      <div class="card-title">💾 Daten-Management</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn btn-gold" onclick="exportData()">📤 Alles exportieren (JSON)</button>
+        <button class="btn btn-outline" onclick="document.getElementById('import-input').click()">📥 Importieren</button>
+        <button class="btn btn-red" onclick="if(confirm('Alle Daten löschen?'))resetData()">🗑️ Alles zurücksetzen</button>
+        <input type="file" id="import-input" accept=".json" style="display:none" onchange="importData(event)">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════ MODALS ══════════════════════════════ -->
+
+<!-- FELD anlegen -->
+<div class="modal-overlay" id="modal-feld">
+  <div class="modal">
+    <div class="modal-title">🗺️ Neues Feld anlegen</div>
+    <div class="form-row">
+      <div><label class="form-label">Feld-Nummer</label><input type="number" id="f-nr" placeholder="z.B. 12" min="1"></div>
+      <div><label class="form-label">Name (optional)</label><input type="text" id="f-name" placeholder="Nordfeld"></div>
+    </div>
+    <div class="form-row">
+      <div><label class="form-label">Größe (ha)</label><input type="number" id="f-ha" placeholder="2.5" step="0.1" min="0.1"></div>
+      <div><label class="form-label">Aktuelle Frucht</label><select id="f-frucht"></select></div>
+    </div>
+    <div class="form-row">
+      <div><label class="form-label">Status</label>
+        <select id="f-status">
+          <option value="frei">Frei</option>
+          <option value="angebaut">Angebaut</option>
+          <option value="bereit">Erntebereit</option>
+          <option value="gepfluegt">Gepflügt</option>
+          <option value="gesaet">Gesät</option>
+        </select>
+      </div>
+      <div><label class="form-label">Dünger (%)</label><input type="number" id="f-duenger" value="100" min="0" max="200"></div>
+    </div>
+    <div class="form-row">
+      <div><label class="form-label">Ertrag/ha (t, geschätzt)</label><input type="number" id="f-ertrag" placeholder="7" step="0.1" min="0"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-feld')">Abbrechen</button>
+      <button class="btn btn-green" onclick="saveFeld()">Feld speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- FF FELD -->
+<div class="modal-overlay" id="modal-ff-feld">
+  <div class="modal">
+    <div class="modal-title">🌱 Feld zur Fruchtfolge hinzufügen</div>
+    <div class="form-row">
+      <div><label class="form-label">Feld wählen</label>
+        <select id="ff-feld-select">
+          <option value="">-- Feld wählen --</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-ff-feld')">Abbrechen</button>
+      <button class="btn btn-green" onclick="addFeldToFF()">Hinzufügen</button>
+    </div>
+  </div>
+</div>
+
+<!-- LAGER anlegen -->
+<div class="modal-overlay" id="modal-lager">
+  <div class="modal">
+    <div class="modal-title">📦 Stellplatz anlegen</div>
+    <div class="form-row">
+      <div><label class="form-label">Name des Stellplatzes</label><input type="text" id="l-name" placeholder="Scheune Nord"></div>
+    </div>
+    <div class="form-row">
+      <div><label class="form-label">Kapazität (t)</label><input type="number" id="l-cap" placeholder="500" min="1"></div>
+      <div><label class="form-label">Typ</label>
+        <select id="l-typ">
+          <option>Scheune</option><option>Silo</option><option>Kühlhaus</option>
+          <option>Außenlager</option><option>Flüssigbehälter</option><option>Sonstiges</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div><label class="form-label">Produkt (Hauptinhalt)</label><select id="l-produkt"><option value="">Allgemein / Leer</option></select></div>
+      <div><label class="form-label">Standort (optional)</label><input type="text" id="l-standort" placeholder="Hof, Feld 3..."></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-lager')">Abbrechen</button>
+      <button class="btn btn-green" onclick="saveLager()">Stellplatz speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- COLLI anlegen -->
+<div class="modal-overlay" id="modal-colli">
+  <div class="modal">
+    <div class="modal-title">🏷️ Colli anlegen</div>
+    <div class="form-row">
+      <div><label class="form-label">Colli-ID</label><input type="text" id="c-id" placeholder="Auto (leer lassen)"></div>
+      <div><label class="form-label">Produkt</label><select id="c-produkt"></select></div>
+    </div>
+    <div class="form-row">
+      <div><label class="form-label">Menge</label><input type="number" id="c-menge" placeholder="0" min="0" step="0.1"></div>
+      <div><label class="form-label">Einheit</label>
+        <select id="c-einheit"><option>t</option><option>l</option><option>kg</option><option>Stück</option><option>Palette</option></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div><label class="form-label">Von (Ursprung)</label><input type="text" id="c-von" placeholder="Feld 5, Scheune..."></div>
+      <div><label class="form-label">Nach (Ziel)</label><input type="text" id="c-nach" placeholder="Silo 1, Händler..."></div>
+    </div>
+    <div class="form-row">
+      <div><label class="form-label">Status</label>
+        <select id="c-status">
+          <option value="gelagert">Gelagert</option>
+          <option value="unterwegs">Unterwegs</option>
+          <option value="geliefert">Geliefert</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-colli')">Abbrechen</button>
+      <button class="btn btn-green" onclick="saveColli()">Colli speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- TRANSAKTION -->
+<div class="modal-overlay" id="modal-transaktion">
+  <div class="modal">
+    <div class="modal-title">💰 Neue Buchung</div>
+    <div class="form-row">
+      <div><label class="form-label">Typ</label>
+        <select id="t-typ">
+          <option value="einnahme">📈 Einnahme</option>
+          <option value="ausgabe">📉 Ausgabe</option>
+        </select>
+      </div>
+      <div><label class="form-label">Kategorie</label>
+        <select id="t-kat">
+          <option>Ernte</option><option>Saatgut</option><option>Dünger</option>
+          <option>Maschinen</option><option>Treibstoff</option><option>Kredit</option><option>Sonstiges</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div><label class="form-label">Beschreibung</label><input type="text" id="t-desc" placeholder="z.B. Weizenverkauf Feld 5"></div>
+    </div>
+    <div class="form-row">
+      <div><label class="form-label">Betrag (€)</label><input type="number" id="t-betrag" placeholder="0" min="0" step="0.01"></div>
+      <div><label class="form-label">Datum</label><input type="date" id="t-datum"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-transaktion')">Abbrechen</button>
+      <button class="btn btn-gold" onclick="saveTransaktion()">Buchen</button>
+    </div>
+  </div>
+</div>
+
+<!-- KREDIT -->
+<div class="modal-overlay" id="modal-kredit">
+  <div class="modal">
+    <div class="modal-title">🏦 Kredit aufnehmen</div>
+    <div class="form-row">
+      <div><label class="form-label">Bezeichnung</label><input type="text" id="k-name" placeholder="Maschinenkredit"></div>
+    </div>
+    <div class="form-row">
+      <div><label class="form-label">Betrag (€)</label><input type="number" id="k-betrag" placeholder="0" min="0"></div>
+      <div><label class="form-label">Zinssatz (%/Jahr)</label><input type="number" id="k-zins" placeholder="3.5" step="0.1" min="0"></div>
+    </div>
+    <div class="form-row">
+      <div><label class="form-label">Laufzeit (Jahre)</label><input type="number" id="k-laufzeit" placeholder="5" min="1"></div>
+    </div>
+    <div id="k-preview" style="font-size:12px;color:var(--text-dim);margin-top:8px;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-kredit')">Abbrechen</button>
+      <button class="btn btn-gold" onclick="saveKredit()">Kredit aufnehmen</button>
+    </div>
+  </div>
+</div>
+
+<!-- WIEDERKEHREND -->
+<div class="modal-overlay" id="modal-wiederk">
+  <div class="modal">
+    <div class="modal-title">🔄 Wiederkehrende Kosten</div>
+    <div class="form-row">
+      <div><label class="form-label">Beschreibung</label><input type="text" id="w-desc" placeholder="Versicherung, Pacht..."></div>
+    </div>
+    <div class="form-row">
+      <div><label class="form-label">Betrag (€)</label><input type="number" id="w-betrag" placeholder="0" min="0" step="0.01"></div>
+      <div><label class="form-label">Intervall</label>
+        <select id="w-intervall">
+          <option value="monatlich">Monatlich</option>
+          <option value="quartalsweise">Quartalsweise</option>
+          <option value="jaehrlich">Jährlich</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-wiederk')">Abbrechen</button>
+      <button class="btn btn-gold" onclick="saveWiederk()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ══════════════════════════ STATE ══════════════════════════
+let state = {
+  settings: { farmname: 'Mein Hof', year: 1, season: 'Frühling', cash: 0 },
+  fruechte: [
+    { name:'Weizen', color:'#f0d060' },
+    { name:'Raps', color:'#c8e840' },
+    { name:'Gerste', color:'#d4a843' },
+    { name:'Mais', color:'#e8b030' },
+    { name:'Zuckerrüben', color:'#c0e8b0' },
+    { name:'Kartoffeln', color:'#b89040' },
+    { name:'Sonnenblume', color:'#f5c842' },
+    { name:'Sojabohne', color:'#98c060' },
+    { name:'Gras', color:'#60a840' },
+    { name:'Leer', color:'#2a3a2a' },
+  ],
+  produkte: [
+    { name:'Weizen', preis:185 },{ name:'Raps', preis:420 },{ name:'Gerste', preis:170 },
+    { name:'Mais', preis:160 },{ name:'Zuckerrüben', preis:40 },{ name:'Kartoffeln', preis:140 },
+    { name:'Sonnenblume', preis:440 },{ name:'Sojabohne', preis:390 },{ name:'Milch', preis:38 },
+    { name:'Dünger', preis:280 },{ name:'Stroh', preis:55 },{ name:'Holz', preis:90 },
+  ],
+  felder: [],
+  ffFelder: [], // felder in fruchtfolge
+  ffPlan: {},   // { feldId: { year: fruchtName } }
+  lager: [],
+  collis: [],
+  transaktionen: [],
+  kredite: [],
+  wiederkehrend: [],
+  scanLog: [],
+  colliCounter: 1,
+};
+
+// ══════════════════════════ PERSIST ══════════════════════════
+function save() { localStorage.setItem('ls25fm', JSON.stringify(state)); }
+function load() {
+  const d = localStorage.getItem('ls25fm');
+  if (d) { try { state = {...state, ...JSON.parse(d)}; } catch(e){} }
+}
+
+// ══════════════════════════ NAV ══════════════════════════
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  event.currentTarget.classList.add('active');
+  renderAll();
+}
+
+// ══════════════════════════ TOAST ══════════════════════════
+function toast(msg, type='green') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = type==='red'?'var(--red)':type==='gold'?'var(--gold)':'var(--green)';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ══════════════════════════ MODALS ══════════════════════════
+function openModal(id) {
+  populateSelects();
+  document.getElementById(id).classList.add('open');
+  if(id==='modal-transaktion') document.getElementById('t-datum').value = new Date().toISOString().split('T')[0];
+}
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+window.addEventListener('click', e => {
+  if(e.target.classList.contains('modal-overlay')) e.target.classList.remove('open');
+});
+
+// ══════════════════════════ POPULATE SELECTS ══════════════════════════
+function populateSelects() {
+  // Früchte
+  ['f-frucht','ff-feld-frucht'].forEach(id => {
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.innerHTML = state.fruechte.map(f=>`<option value="${f.name}">${f.name}</option>`).join('');
+  });
+  // Felder
+  const ffs = document.getElementById('ff-feld-select');
+  if(ffs) ffs.innerHTML='<option value="">-- Feld wählen --</option>' +
+    state.felder.map(f=>`<option value="${f.id}">Feld ${f.nr} – ${f.name||''} (${f.ha}ha)</option>`).join('');
+  // Felder-Frucht
+  const ff = document.getElementById('f-frucht');
+  if(ff) ff.innerHTML = state.fruechte.map(f=>`<option value="${f.name}">${f.name}</option>`).join('');
+  // Produkte
+  ['c-produkt','scan-produkt','l-produkt'].forEach(id => {
+    const el = document.getElementById(id);
+    if(!el) return;
+    const emptyOpt = id==='l-produkt'?'<option value="">Allgemein / Leer</option>':'<option value="">-- wählen --</option>';
+    el.innerHTML = emptyOpt + state.produkte.map(p=>`<option value="${p.name}">${p.name}</option>`).join('');
+  });
+  // Lager für Scanner
+  const sl = document.getElementById('scan-lager');
+  if(sl) sl.innerHTML = '<option value="">-- Lager wählen --</option>' +
+    state.lager.map(l=>`<option value="${l.id}">${l.name}</option>`).join('');
+}
+
+// ══════════════════════════ FELDER ══════════════════════════
+function saveFeld() {
+  const nr = parseInt(document.getElementById('f-nr').value);
+  const ha = parseFloat(document.getElementById('f-ha').value);
+  if(!nr || !ha) { toast('Feld-Nr und Größe erforderlich!','red'); return; }
+  const feld = {
+    id: Date.now(), nr, name: document.getElementById('f-name').value,
+    ha, frucht: document.getElementById('f-frucht').value,
+    status: document.getElementById('f-status').value,
+    duenger: parseInt(document.getElementById('f-duenger').value)||100,
+    ertrag: parseFloat(document.getElementById('f-ertrag').value)||0,
+  };
+  state.felder.push(feld);
+  logActivity(`Feld ${nr} angelegt (${ha}ha)`);
+  save(); closeModal('modal-feld'); renderAll(); toast('Feld angelegt ✓');
+}
+
+function deleteFeld(id) {
+  if(!confirm('Feld löschen?')) return;
+  state.felder = state.felder.filter(f=>f.id!==id);
+  state.ffFelder = state.ffFelder.filter(i=>i!==id);
+  save(); renderAll(); toast('Feld gelöscht','red');
+}
+
+function renderFelder() {
+  const tb = document.getElementById('felder-tbody');
+  if(!state.felder.length) { tb.innerHTML='<tr><td colspan="8" class="empty-state">Keine Felder.</td></tr>'; return; }
+  const statusColor = {frei:'blue',angebaut:'green',bereit:'gold',gepfluegt:'orange',gesaet:'green'};
+  tb.innerHTML = state.felder.map(f=>`
+    <tr>
+      <td><b>${f.nr}</b></td>
+      <td>${f.name||'—'}</td>
+      <td>${f.ha} ha</td>
+      <td>${f.frucht||'—'}</td>
+      <td><span class="badge badge-${statusColor[f.status]||'blue'}">${f.status}</span></td>
+      <td>${f.duenger}%</td>
+      <td>${f.ertrag?f.ertrag+' t':'-'}</td>
+      <td>
+        <button class="btn btn-sm btn-outline" onclick="editFeldStatus(${f.id})">✏️</button>
+        <button class="btn btn-sm btn-red" onclick="deleteFeld(${f.id})">🗑️</button>
+      </td>
+    </tr>`).join('');
+}
+
+function editFeldStatus(id) {
+  const f = state.felder.find(x=>x.id===id);
+  if(!f) return;
+  const newStatus = prompt('Neuer Status (frei/angebaut/bereit/gepfluegt/gesaet):', f.status);
+  if(newStatus) { f.status = newStatus; save(); renderAll(); toast('Status aktualisiert'); }
+}
+
+// ══════════════════════════ FRUCHTFOLGE ══════════════════════════
+const FRUCHT_COLORS = {};
+function getFruchtColor(name) {
+  const f = state.fruechte.find(x=>x.name===name);
+  return f ? f.color : '#444';
+}
+
+function addFeldToFF() {
+  const id = parseInt(document.getElementById('ff-feld-select').value);
+  if(!id) { toast('Kein Feld ausgewählt','red'); return; }
+  if(!state.ffFelder.includes(id)) state.ffFelder.push(id);
+  save(); closeModal('modal-ff-feld'); renderFF(); toast('Feld zur Fruchtfolge hinzugefügt');
+}
+
+function renderFF() {
+  const wrap = document.getElementById('ff-matrix-wrap');
+  const years = parseInt(document.getElementById('ff-years').value)||6;
+  const start = parseInt(document.getElementById('ff-startyear').value)||1;
+  const felder = state.ffFelder.map(id=>state.felder.find(f=>f.id===id)).filter(Boolean);
+
+  if(!felder.length) { wrap.innerHTML='<div class="empty-state">Füge Felder hinzu.</div>'; renderFFLegend(); return; }
+
+  // Header
+  let html = '<div class="ff-header-row">';
+  for(let y=0;y<years;y++) html+=`<div class="ff-header-cell">J${start+y}</div>`;
+  html += '</div>';
+
+  felder.forEach(f => {
+    html += `<div class="ff-row">
+      <div class="ff-row-label">F${f.nr}<br><span style="font-size:10px">${f.name||''}</span></div>
+      <div class="ff-row-cells">`;
+    for(let y=0;y<years;y++) {
+      const key = `${f.id}_${start+y}`;
+      const fruit = (state.ffPlan[key])||'';
+      const col = fruit ? getFruchtColor(fruit) : '#1e321e';
+      const textCol = fruit ? '#fff' : '#4a6a4a';
+      html += `<div class="ff-cell" style="background:${col};color:${textCol}" 
+        onclick="setFFCell(${f.id},${start+y})" title="J${start+y}: ${fruit||'leer'}">
+        ${fruit ? `<span style="font-size:10px;text-shadow:0 1px 2px rgba(0,0,0,.5)">${fruit.substring(0,5)}</span>` : '+'}
+      </div>`;
+    }
+    html += '</div></div>';
+  });
+  wrap.innerHTML = html;
+  renderFFLegend();
+}
+
+function setFFCell(feldId, year) {
+  const opts = state.fruechte.map(f=>f.name).join(', ');
+  const curr = state.ffPlan[`${feldId}_${year}`]||'';
+  const fruit = prompt(`Frucht für J${year} (${opts}):`, curr);
+  if(fruit !== null) {
+    state.ffPlan[`${feldId}_${year}`] = fruit;
+    save(); renderFF();
+  }
+}
+
+function autoFill() {
+  const rotations = [
+    ['Weizen','Raps','Gerste'],
+    ['Mais','Weizen','Rüben'],
+    ['Raps','Weizen','Gerste','Roggen'],
+  ];
+  const years = parseInt(document.getElementById('ff-years').value)||6;
+  const start = parseInt(document.getElementById('ff-startyear').value)||1;
+  state.ffFelder.forEach((fid, fi) => {
+    const rot = rotations[fi % rotations.length];
+    for(let y=0;y<years;y++) {
+      state.ffPlan[`${fid}_${start+y}`] = rot[y % rot.length];
+    }
+  });
+  save(); renderFF(); toast('Auto-Empfehlung angewendet 🔮');
+}
+
+function renderFFLegend() {
+  const leg = document.getElementById('ff-legend');
+  leg.innerHTML = state.fruechte.map(f=>
+    `<span style="background:${f.color};color:#fff;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:700">${f.name}</span>`
+  ).join('');
+}
+
+function exportFF() {
+  const years = parseInt(document.getElementById('ff-years').value)||6;
+  const start = parseInt(document.getElementById('ff-startyear').value)||1;
+  let csv = 'Feld;' + Array.from({length:years},(_,i)=>`Jahr ${start+i}`).join(';') + '\n';
+  state.ffFelder.forEach(fid => {
+    const f = state.felder.find(x=>x.id===fid);
+    if(!f) return;
+    let row = `Feld ${f.nr} (${f.name||''})`;
+    for(let y=0;y<years;y++) row+=';'+(state.ffPlan[`${fid}_${start+y}`]||'');
+    csv += row + '\n';
+  });
+  dlFile('fruchtfolge.csv', csv, 'text/csv');
+  toast('Fruchtfolge exportiert');
+}
+
+// ══════════════════════════ LAGER ══════════════════════════
+function saveLager() {
+  const name = document.getElementById('l-name').value.trim();
+  const cap = parseFloat(document.getElementById('l-cap').value);
+  if(!name||!cap) { toast('Name und Kapazität erforderlich','red'); return; }
+  state.lager.push({
+    id: Date.now(), name, cap, typ: document.getElementById('l-typ').value,
+    produkt: document.getElementById('l-produkt').value,
+    standort: document.getElementById('l-standort').value,
+    bestand: 0
+  });
+  save(); closeModal('modal-lager'); renderAll(); toast('Stellplatz angelegt ✓');
+}
+
+function renderLager() {
+  const grid = document.getElementById('lager-grid');
+  if(!state.lager.length) { grid.innerHTML='<div class="empty-state" style="grid-column:1/-1">Keine Stellplätze.</div>'; updateLagerStats(); return; }
+  grid.innerHTML = state.lager.map(l=>{
+    const pct = Math.round((l.bestand/l.cap)*100)||0;
+    const barColor = pct>90?'var(--red)':pct>70?'var(--orange)':'var(--green)';
+    return `<div class="colli-card">
+      <div style="display:flex;justify-content:space-between;align-items:start;">
+        <div class="colli-name">${l.name}</div>
+        <button class="btn btn-sm btn-red" onclick="deleteLager(${l.id})" style="padding:2px 6px;">×</button>
+      </div>
+      <div class="colli-detail">${l.typ} · ${l.standort||'—'}</div>
+      <div class="colli-qty">${l.bestand}<span style="font-size:13px;color:var(--text-dim)"> / ${l.cap} t</span></div>
+      ${l.produkt?`<div class="colli-detail">📦 ${l.produkt}</div>`:''}
+      <div class="colli-bar-wrap"><div class="colli-bar" style="width:${pct}%;background:${barColor}"></div></div>
+      <div style="font-size:11px;color:var(--text-dim);margin-top:4px;">${pct}% belegt</div>
+      <div style="display:flex;gap:6px;margin-top:10px;">
+        <button class="btn btn-sm btn-green" style="flex:1" onclick="adjustLager(${l.id},1)">+ Einlagern</button>
+        <button class="btn btn-sm btn-outline" style="flex:1" onclick="adjustLager(${l.id},-1)">- Entnehmen</button>
+      </div>
+    </div>`;
+  }).join('');
+  updateLagerStats();
+}
+
+function deleteLager(id) {
+  if(!confirm('Stellplatz löschen?')) return;
+  state.lager = state.lager.filter(l=>l.id!==id);
+  save(); renderAll(); toast('Gelöscht','red');
+}
+
+function adjustLager(id, dir) {
+  const l = state.lager.find(x=>x.id===id);
+  if(!l) return;
+  const amt = parseFloat(prompt(dir>0?'Einlagern (t):':'Entnehmen (t):', '0'))||0;
+  if(amt<=0) return;
+  if(dir>0) {
+    if(l.bestand+amt>l.cap) { toast('Kapazität überschritten!','red'); return; }
+    l.bestand += amt;
+    logActivity(`${amt}t in ${l.name} eingelagert`);
+  } else {
+    if(l.bestand-amt<0) { toast('Nicht genug Bestand!','red'); return; }
+    l.bestand -= amt;
+    logActivity(`${amt}t aus ${l.name} entnommen`);
+  }
+  save(); renderAll(); toast(dir>0?'Eingelagert ✓':'Entnommen ✓');
+}
+
+function updateLagerStats() {
+  const total = state.lager.length;
+  const cap = state.lager.reduce((s,l)=>s+l.cap,0);
+  const used = state.lager.reduce((s,l)=>s+l.bestand,0);
+  const pct = cap>0?Math.round(used/cap*100):0;
+  document.getElementById('lager-total').textContent = total;
+  document.getElementById('lager-cap').textContent = cap+' t';
+  document.getElementById('lager-used').textContent = used.toFixed(1)+' t';
+  document.getElementById('lager-pct').textContent = pct+'%';
+}
+
+// ══════════════════════════ COLLIS ══════════════════════════
+function genColliId() {
+  return 'COL-'+String(state.colliCounter++).padStart(4,'0');
+}
+
+function saveColli() {
+  const menge = parseFloat(document.getElementById('c-menge').value)||0;
+  const produkt = document.getElementById('c-produkt').value;
+  if(!produkt) { toast('Produkt erforderlich','red'); return; }
+  const colli = {
+    id: Date.now(),
+    colliId: document.getElementById('c-id').value.trim() || genColliId(),
+    produkt, menge,
+    einheit: document.getElementById('c-einheit').value,
+    von: document.getElementById('c-von').value,
+    nach: document.getElementById('c-nach').value,
+    status: document.getElementById('c-status').value,
+    erstellt: new Date().toLocaleDateString('de-DE'),
+  };
+  state.collis.push(colli);
+  logActivity(`Colli ${colli.colliId} angelegt (${produkt})`);
+  save(); closeModal('modal-colli'); renderAll(); toast('Colli angelegt ✓');
+}
+
+function deleteColli(id) {
+  state.collis = state.collis.filter(c=>c.id!==id);
+  save(); renderAll(); toast('Colli gelöscht','red');
+}
+
+function updateColliStatus(id, status) {
+  const c = state.collis.find(x=>x.id===id);
+  if(c) { c.status=status; save(); renderAll(); toast('Status aktualisiert'); }
+}
+
+function renderCollis() {
+  const search = document.getElementById('colli-search').value.toLowerCase();
+  const filter = document.getElementById('colli-filter').value;
+  let collis = state.collis.filter(c=>{
+    if(filter && c.status!==filter) return false;
+    if(search && !c.colliId.toLowerCase().includes(search) && !c.produkt.toLowerCase().includes(search)) return false;
+    return true;
+  });
+  const tb = document.getElementById('collis-tbody');
+  const statusBadge = {gelagert:'badge-blue',unterwegs:'badge-orange',geliefert:'badge-green'};
+  tb.innerHTML = collis.map(c=>`<tr>
+    <td><b>${c.colliId}</b></td>
+    <td>${c.produkt}</td>
+    <td>${c.menge}</td>
+    <td>${c.einheit}</td>
+    <td>${c.von||'—'}</td>
+    <td>${c.nach||'—'}</td>
+    <td>
+      <select class="badge ${statusBadge[c.status]||''}" style="background:transparent;border:none;cursor:pointer" onchange="updateColliStatus(${c.id},this.value)">
+        <option value="gelagert" ${c.status==='gelagert'?'selected':''}>📦 Gelagert</option>
+        <option value="unterwegs" ${c.status==='unterwegs'?'selected':''}>🚛 Unterwegs</option>
+        <option value="geliefert" ${c.status==='geliefert'?'selected':''}>✅ Geliefert</option>
+      </select>
+    </td>
+    <td>${c.erstellt}</td>
+    <td><button class="btn btn-sm btn-red" onclick="deleteColli(${c.id})">🗑️</button></td>
+  </tr>`).join('') || '<tr><td colspan="9" class="empty-state">Keine Collis.</td></tr>';
+
+  document.getElementById('colli-total').textContent = state.collis.length;
+  document.getElementById('colli-aktiv').textContent = state.collis.filter(c=>c.status==='unterwegs').length;
+  document.getElementById('colli-gelagert').textContent = state.collis.filter(c=>c.status==='gelagert').length;
+  document.getElementById('colli-geliefert').textContent = state.collis.filter(c=>c.status==='geliefert').length;
+}
+
+// ══════════════════════════ SCANNER ══════════════════════════
+function doScan() {
+  const produkt = document.getElementById('scan-produkt').value;
+  const menge = parseFloat(document.getElementById('scan-menge').value)||0;
+  const einheit = document.getElementById('scan-einheit').value;
+  const lagerId = parseInt(document.getElementById('scan-lager').value)||0;
+  const aktion = document.getElementById('scan-aktion').value;
+  const input = document.getElementById('scan-input').value.trim();
+
+  if(!produkt && !input) { toast('Produkt oder ID erforderlich','red'); return; }
+
+  const lager = state.lager.find(l=>l.id===lagerId);
+  const now = new Date();
+  const zeit = now.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+
+  let result = { zeit, produkt: produkt||input, menge, einheit, aktion, lager: lager?.name||'—' };
+
+  if(aktion==='einlagern' && lager && menge>0) {
+    if(lager.bestand+menge>lager.cap) { toast('Kapazität überschritten!','red'); return; }
+    lager.bestand += menge;
+  } else if(aktion==='auslagern' && lager && menge>0) {
+    if(lager.bestand-menge<0) { toast('Nicht genug Bestand!','red'); return; }
+    lager.bestand -= menge;
+  } else if(aktion==='colli') {
+    state.collis.push({
+      id: Date.now(), colliId: genColliId(), produkt: produkt||input,
+      menge, einheit, von: lager?.name||'—', nach:'', status:'gelagert',
+      erstellt: now.toLocaleDateString('de-DE')
+    });
+  }
+
+  state.scanLog.unshift(result);
+  if(state.scanLog.length>100) state.scanLog = state.scanLog.slice(0,100);
+  logActivity(`Scan: ${aktion} ${menge}${einheit} ${produkt||input}`);
+  save();
+
+  // Clear inputs
+  document.getElementById('scan-input').value='';
+  document.getElementById('scan-menge').value='';
+
+  renderScanLog(); renderAll(); toast(`Erfasst: ${produkt||input} ✓`);
+}
+
+function renderScanLog() {
+  const log = state.scanLog.slice(0,20);
+  const tb = document.getElementById('scan-log');
+  const empty = document.getElementById('scan-log-empty');
+  if(!log.length) { tb.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  const aktionEmoji = {einlagern:'📥',auslagern:'📤',inventur:'🔢',colli:'🏷️'};
+  tb.innerHTML = log.map(s=>`<tr>
+    <td>${s.zeit}</td>
+    <td>${s.produkt}</td>
+    <td>${s.menge} ${s.einheit}</td>
+    <td>${aktionEmoji[s.aktion]||''} ${s.aktion}</td>
+    <td>${s.lager}</td>
+  </tr>`).join('');
+
+  // Summary
+  const summary = document.getElementById('scan-summary');
+  const totalEin = state.scanLog.filter(s=>s.aktion==='einlagern').reduce((a,s)=>a+s.menge,0);
+  const totalAus = state.scanLog.filter(s=>s.aktion==='auslagern').reduce((a,s)=>a+s.menge,0);
+  summary.innerHTML = `<div class="stat" style="margin-bottom:8px">
+    <div class="stat-val">${state.scanLog.length}</div><div class="stat-lbl">Scans gesamt</div></div>
+    <div class="grid2" style="gap:8px">
+      <div class="stat"><div class="stat-val fin-positive">${totalEin.toFixed(1)}</div><div class="stat-lbl">Eingelagert (t)</div></div>
+      <div class="stat"><div class="stat-val fin-negative">${totalAus.toFixed(1)}</div><div class="stat-lbl">Ausgelagert (t)</div></div>
+    </div>`;
+}
+
+let barcodeMode = false, barcodeBuffer = '';
+function activateBarcode() {
+  barcodeMode = true;
+  barcodeBuffer = '';
+  document.getElementById('barcode-status').textContent = '✅ Barcode-Modus aktiv – Scanner bereit';
+  toast('Barcode-Modus aktiv!','gold');
+}
+document.addEventListener('keydown', e => {
+  if(!barcodeMode) return;
+  if(e.key==='Enter') {
+    if(barcodeBuffer.length>2) {
+      document.getElementById('scan-input').value = barcodeBuffer;
+      toast('Barcode erkannt: '+barcodeBuffer,'gold');
+      document.getElementById('barcode-status').textContent = '📷 Erkannt: '+barcodeBuffer;
+    }
+    barcodeBuffer='';
+  } else if(e.key.length===1) barcodeBuffer += e.key;
+});
+
+// ══════════════════════════ FINANZEN ══════════════════════════
+function saveTransaktion() {
+  const betrag = parseFloat(document.getElementById('t-betrag').value)||0;
+  const desc = document.getElementById('t-desc').value.trim();
+  if(!betrag||!desc) { toast('Betrag und Beschreibung erforderlich','red'); return; }
+  state.transaktionen.push({
+    id: Date.now(),
+    typ: document.getElementById('t-typ').value,
+    kat: document.getElementById('t-kat').value,
+    desc, betrag,
+    datum: document.getElementById('t-datum').value,
+    year: state.settings.year,
+  });
+  save(); closeModal('modal-transaktion'); renderAll(); toast('Buchung gespeichert ✓');
+}
+
+function deleteTransaktion(id) {
+  state.transaktionen = state.transaktionen.filter(t=>t.id!==id);
+  save(); renderAll(); toast('Buchung gelöscht','red');
+}
+
+function renderTransaktionen() {
+  const search = (document.getElementById('fin-search')?.value||'').toLowerCase();
+  const filterTyp = document.getElementById('fin-filter-typ')?.value||'';
+  const filterKat = document.getElementById('fin-filter-kat')?.value||'';
+  let txs = [...state.transaktionen].reverse().filter(t=>{
+    if(filterTyp && t.typ!==filterTyp) return false;
+    if(filterKat && t.kat!==filterKat) return false;
+    if(search && !t.desc.toLowerCase().includes(search) && !t.kat.toLowerCase().includes(search)) return false;
+    return true;
+  });
+  const tb = document.getElementById('fin-tbody');
+  const empty = document.getElementById('fin-empty');
+
+  // Compute running balance
+  let saldo = state.settings.cash || 0;
+  const txsSorted = [...state.transaktionen].sort((a,b)=>new Date(a.datum)-new Date(b.datum));
+  const saldoMap = {};
+  let running = 0;
+  txsSorted.forEach(t => {
+    running += t.typ==='einnahme'?t.betrag:-t.betrag;
+    saldoMap[t.id] = running;
+  });
+
+  if(!txs.length) { tb.innerHTML=''; empty.style.display='block'; }
+  else {
+    empty.style.display='none';
+    tb.innerHTML = txs.map(t=>`<tr>
+      <td>${t.datum||'—'}</td>
+      <td>${t.desc}</td>
+      <td><span class="tag">${t.kat}</span></td>
+      <td><span class="badge ${t.typ==='einnahme'?'badge-green':'badge-red'}">${t.typ==='einnahme'?'📈 Einnahme':'📉 Ausgabe'}</span></td>
+      <td class="${t.typ==='einnahme'?'fin-positive':'fin-negative'}"><b>${t.typ==='einnahme'?'+':'-'}€${t.betrag.toFixed(2)}</b></td>
+      <td>€${(saldoMap[t.id]||0).toFixed(2)}</td>
+      <td><button class="btn btn-sm btn-red" onclick="deleteTransaktion(${t.id})">🗑️</button></td>
+    </tr>`).join('');
+  }
+
+  updateFinStats();
+}
+
+function updateFinStats() {
+  const einnahmen = state.transaktionen.filter(t=>t.typ==='einnahme').reduce((s,t)=>s+t.betrag,0);
+  const ausgaben = state.transaktionen.filter(t=>t.typ==='ausgabe').reduce((s,t)=>s+t.betrag,0);
+  const konto = (state.settings.cash||0) + einnahmen - ausgaben;
+  const marge = einnahmen>0?Math.round((einnahmen-ausgaben)/einnahmen*100):0;
+
+  document.getElementById('fin-konto').textContent = '€'+konto.toFixed(2);
+  document.getElementById('fin-einnahmen').textContent = '€'+einnahmen.toFixed(2);
+  document.getElementById('fin-ausgaben').textContent = '€'+ausgaben.toFixed(2);
+  document.getElementById('fin-gewinnmarge').textContent = marge+'%';
+  document.getElementById('hdr-cash').textContent = '€'+Math.round(konto).toLocaleString('de-DE');
+}
+
+function saveKredit() {
+  const name = document.getElementById('k-name').value.trim();
+  const betrag = parseFloat(document.getElementById('k-betrag').value)||0;
+  const zins = parseFloat(document.getElementById('k-zins').value)||0;
+  const laufzeit = parseInt(document.getElementById('k-laufzeit').value)||1;
+  if(!name||!betrag) { toast('Name und Betrag erforderlich','red'); return; }
+  state.kredite.push({ id:Date.now(), name, betrag, zins, laufzeit, aufgenommen: new Date().toLocaleDateString('de-DE'), rest: betrag });
+  // Buchung
+  state.transaktionen.push({id:Date.now()+1,typ:'einnahme',kat:'Kredit',desc:'Kredit: '+name,betrag,datum:new Date().toISOString().split('T')[0],year:state.settings.year});
+  save(); closeModal('modal-kredit'); renderAll(); toast('Kredit aufgenommen ✓','gold');
+}
+
+function renderKredite() {
+  const el = document.getElementById('fin-kredite');
+  if(!state.kredite.length) { el.innerHTML='<div class="empty-state">Keine Kredite</div>'; return; }
+  el.innerHTML = state.kredite.map(k=>{
+    const pct = Math.round((1-k.rest/k.betrag)*100);
+    const rate = (k.betrag * (1+k.zins/100*k.laufzeit) / k.laufzeit).toFixed(0);
+    return `<div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between"><b>${k.name}</b><span class="badge badge-red">€${k.rest.toFixed(0)} Rest</span></div>
+      <div style="font-size:12px;color:var(--text-dim)">€${k.betrag} · ${k.zins}% · ${k.laufzeit}J · ~€${rate}/Jahr</div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:var(--green)"></div></div>
+      <div style="font-size:11px;color:var(--text-dim);margin-top:2px">${pct}% abbezahlt</div>
+      <button class="btn btn-sm btn-outline" style="margin-top:6px" onclick="tilgeKredit(${k.id})">💳 Rate zahlen</button>
+    </div>`;
+  }).join('');
+}
+
+function tilgeKredit(id) {
+  const k = state.kredite.find(x=>x.id===id);
+  if(!k) return;
+  const rate = parseFloat(prompt('Tilgungsbetrag (€):', Math.round(k.betrag/k.laufzeit)))||0;
+  if(!rate) return;
+  k.rest = Math.max(0, k.rest-rate);
+  state.transaktionen.push({id:Date.now(),typ:'ausgabe',kat:'Kredit',desc:'Tilgung: '+k.name,betrag:rate,datum:new Date().toISOString().split('T')[0],year:state.settings.year});
+  if(k.rest===0) { state.kredite=state.kredite.filter(x=>x.id!==id); toast('Kredit abbezahlt! 🎉','gold'); }
+  else toast('Tilgung gebucht ✓');
+  save(); renderAll();
+}
+
+function saveWiederk() {
+  const desc = document.getElementById('w-desc').value.trim();
+  const betrag = parseFloat(document.getElementById('w-betrag').value)||0;
+  if(!desc||!betrag) { toast('Beschreibung und Betrag erforderlich','red'); return; }
+  state.wiederkehrend.push({id:Date.now(),desc,betrag,intervall:document.getElementById('w-intervall').value});
+  save(); closeModal('modal-wiederk'); renderWiederk(); toast('Dauerkosten gespeichert ✓');
+}
+
+function renderWiederk() {
+  const el = document.getElementById('fin-wiederk');
+  if(!state.wiederkehrend.length) { el.innerHTML='<div class="empty-state">Keine Dauerkosten</div>'; return; }
+  const int2 = {monatlich:12,quartalsweise:4,jaehrlich:1};
+  const total = state.wiederkehrend.reduce((s,w)=>s+w.betrag*int2[w.intervall],0);
+  el.innerHTML = state.wiederkehrend.map(w=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)">
+      <div><div style="font-size:13px">${w.desc}</div><div style="font-size:11px;color:var(--text-dim)">${w.intervall}</div></div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="fin-negative">-€${w.betrag}</span>
+        <button class="btn btn-sm btn-red" onclick="deleteWiederk(${w.id})">×</button>
+      </div>
+    </div>`).join('') +
+    `<div style="margin-top:8px;font-size:13px;font-weight:700;color:var(--red)">Gesamt/Jahr: -€${total.toFixed(0)}</div>`;
+}
+
+function deleteWiederk(id) {
+  state.wiederkehrend=state.wiederkehrend.filter(x=>x.id!==id);
+  save(); renderWiederk(); toast('Gelöscht','red');
+}
+
+function exportFinanzen() {
+  let csv = 'Datum;Beschreibung;Kategorie;Typ;Betrag\n';
+  state.transaktionen.forEach(t=>{ csv+=`${t.datum};${t.desc};${t.kat};${t.typ};${t.betrag.toFixed(2)}\n`; });
+  dlFile('finanzen.csv', csv, 'text/csv');
+  toast('Finanzen exportiert');
+}
+
+// ══════════════════════════ STATISTIK ══════════════════════════
+function renderStats() {
+  const einnahmen = state.transaktionen.filter(t=>t.typ==='einnahme').reduce((s,t)=>s+t.betrag,0);
+  const ausgaben = state.transaktionen.filter(t=>t.typ==='ausgabe').reduce((s,t)=>s+t.betrag,0);
+  const gesamternte = state.felder.reduce((s,f)=>s+f.ha*f.ertrag,0);
+
+  document.getElementById('s-umsatz').textContent='€'+einnahmen.toFixed(0);
+  document.getElementById('s-kosten').textContent='€'+ausgaben.toFixed(0);
+  document.getElementById('s-gewinn').textContent='€'+(einnahmen-ausgaben).toFixed(0);
+  document.getElementById('s-ernte').textContent=gesamternte.toFixed(1)+' t';
+
+  // Früchte nach Ertrag
+  const fruchtStats = {};
+  state.felder.forEach(f => {
+    if(!fruchtStats[f.frucht]) fruchtStats[f.frucht]={ha:0,ertrag:0};
+    fruchtStats[f.frucht].ha += f.ha;
+    fruchtStats[f.frucht].ertrag += f.ha*f.ertrag;
+  });
+  const fruchtEl = document.getElementById('stats-fruechte');
+  if(!Object.keys(fruchtStats).length) { fruchtEl.innerHTML='<div class="empty-state">Keine Daten</div>'; }
+  else {
+    const maxErtrag = Math.max(...Object.values(fruchtStats).map(x=>x.ertrag));
+    fruchtEl.innerHTML = Object.entries(fruchtStats).sort((a,b)=>b[1].ertrag-a[1].ertrag)
+      .map(([name,s])=>{
+        const col = getFruchtColor(name);
+        return `<div style="margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between"><span>${name}</span><b>${s.ertrag.toFixed(1)} t</b></div>
+          <div class="progress-bar"><div class="progress-fill" style="width:${Math.round(s.ertrag/maxErtrag*100)}%;background:${col}"></div></div>
+          <div style="font-size:11px;color:var(--text-dim)">${s.ha.toFixed(1)} ha · ⌀${s.ha>0?(s.ertrag/s.ha).toFixed(1):0} t/ha</div>
+        </div>`;}).join('');
+  }
+
+  // Einnahmen nach Kategorie
+  const katStats = {};
+  state.transaktionen.filter(t=>t.typ==='einnahme').forEach(t=>{
+    if(!katStats[t.kat]) katStats[t.kat]=0;
+    katStats[t.kat]+=t.betrag;
+  });
+  const katEl = document.getElementById('stats-einnahmen');
+  if(!Object.keys(katStats).length) { katEl.innerHTML='<div class="empty-state">Keine Einnahmen</div>'; }
+  else {
+    const maxKat = Math.max(...Object.values(katStats));
+    katEl.innerHTML = Object.entries(katStats).sort((a,b)=>b[1]-a[1]).map(([kat,sum])=>`
+      <div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between"><span>${kat}</span><b class="fin-positive">€${sum.toFixed(0)}</b></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${Math.round(sum/maxKat*100)}%;background:var(--green)"></div></div>
+      </div>`).join('');
+  }
+
+  // Feld-Performance
+  const feldEl = document.getElementById('stats-felder');
+  if(!state.felder.length) { feldEl.innerHTML='<div class="empty-state">Keine Felder</div>'; }
+  else {
+    feldEl.innerHTML = '<div class="tbl-wrap"><table><thead><tr><th>Feld</th><th>Frucht</th><th>ha</th><th>Ertrag/ha</th><th>Gesamt</th></tr></thead><tbody>' +
+      state.felder.map(f=>`<tr><td>F${f.nr} ${f.name||''}</td><td>${f.frucht||'—'}</td><td>${f.ha}</td><td>${f.ertrag} t</td><td>${(f.ha*f.ertrag).toFixed(1)} t</td></tr>`).join('') +
+      '</tbody></table></div>';
+  }
+
+  // Lager-Durchsatz
+  const lagerEl = document.getElementById('stats-lager');
+  if(!state.lager.length) { lagerEl.innerHTML='<div class="empty-state">Keine Lager</div>'; }
+  else {
+    lagerEl.innerHTML = state.lager.map(l=>{
+      const pct = l.cap>0?Math.round(l.bestand/l.cap*100):0;
+      const col = pct>90?'var(--red)':pct>70?'var(--orange)':'var(--green)';
+      return `<div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between"><b>${l.name}</b><span>${l.bestand.toFixed(1)} / ${l.cap} t</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${col}"></div></div>
+        <div style="font-size:11px;color:var(--text-dim)">${pct}% · ${l.typ}</div>
+      </div>`;}).join('');
+  }
+
+  // Monatlich
+  const monatEl = document.getElementById('stats-monat');
+  const monatMap = {};
+  state.transaktionen.forEach(t=>{
+    if(!t.datum) return;
+    const key = t.datum.substring(0,7);
+    if(!monatMap[key]) monatMap[key]={ein:0,aus:0};
+    if(t.typ==='einnahme') monatMap[key].ein+=t.betrag;
+    else monatMap[key].aus+=t.betrag;
+  });
+  if(!Object.keys(monatMap).length) { monatEl.innerHTML='<div class="empty-state">Keine Daten</div>'; }
+  else {
+    monatEl.innerHTML='<div class="tbl-wrap"><table><thead><tr><th>Monat</th><th>Einnahmen</th><th>Ausgaben</th><th>Saldo</th></tr></thead><tbody>' +
+      Object.entries(monatMap).sort((a,b)=>b[0].localeCompare(a[0])).map(([m,v])=>{
+        const saldo=v.ein-v.aus;
+        return `<tr><td>${m}</td><td class="fin-positive">€${v.ein.toFixed(0)}</td><td class="fin-negative">-€${v.aus.toFixed(0)}</td><td class="${saldo>=0?'fin-positive':'fin-negative'}">€${saldo.toFixed(0)}</td></tr>`;
+      }).join('') + '</tbody></table></div>';
+  }
+}
+
+// ══════════════════════════ EINSTELLUNGEN ══════════════════════════
+function saveSettings() {
+  state.settings.farmname = document.getElementById('set-farmname').value||'Mein Hof';
+  state.settings.year = parseInt(document.getElementById('set-year').value)||1;
+  state.settings.season = document.getElementById('set-season').value;
+  state.settings.cash = parseFloat(document.getElementById('set-cash').value)||0;
+  save();
+}
+
+function loadSettings() {
+  document.getElementById('set-farmname').value = state.settings.farmname||'';
+  document.getElementById('set-year').value = state.settings.year||1;
+  document.getElementById('set-season').value = state.settings.season||'Frühling';
+  document.getElementById('set-cash').value = state.settings.cash||0;
+}
+
+function addFrucht() {
+  const name = document.getElementById('new-frucht-name').value.trim();
+  const color = document.getElementById('new-frucht-color').value;
+  if(!name) { toast('Name erforderlich','red'); return; }
+  state.fruechte.push({name,color});
+  document.getElementById('new-frucht-name').value='';
+  save(); renderFruchtListe(); toast('Frucht hinzugefügt ✓');
+}
+
+function renderFruchtListe() {
+  document.getElementById('frucht-liste').innerHTML = state.fruechte.map((f,i)=>
+    `<span style="background:${f.color};color:#fff;padding:4px 8px;border-radius:4px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:4px">
+      ${f.name}
+      <span onclick="deleteFrucht(${i})" style="cursor:pointer;opacity:.7;font-size:10px">×</span>
+    </span>`
+  ).join('');
+}
+
+function deleteFrucht(i) {
+  state.fruechte.splice(i,1); save(); renderFruchtListe();
+}
+
+function addProdukt() {
+  const name = document.getElementById('new-prod-name').value.trim();
+  const preis = parseFloat(document.getElementById('new-prod-preis').value)||0;
+  if(!name) { toast('Name erforderlich','red'); return; }
+  state.produkte.push({name,preis});
+  document.getElementById('new-prod-name').value='';
+  document.getElementById('new-prod-preis').value='';
+  save(); renderProduktListe(); toast('Produkt hinzugefügt ✓');
+}
+
+function renderProduktListe() {
+  document.getElementById('produkt-liste').innerHTML =
+    '<div class="tbl-wrap"><table><thead><tr><th>Produkt</th><th>Preis/t</th><th></th></tr></thead><tbody>' +
+    state.produkte.map((p,i)=>`<tr><td>${p.name}</td><td>€${p.preis}</td><td><button class="btn btn-sm btn-red" onclick="deleteProdukt(${i})">×</button></td></tr>`).join('') +
+    '</tbody></table></div>';
+}
+
+function deleteProdukt(i) {
+  state.produkte.splice(i,1); save(); renderProduktListe();
+}
+
+// ══════════════════════════ DASHBOARD ══════════════════════════
+function renderDashboard() {
+  document.getElementById('dash-felder').textContent = state.felder.length;
+  document.getElementById('dash-ha').textContent = state.felder.reduce((s,f)=>s+f.ha,0).toFixed(1)+' ha';
+  document.getElementById('dash-collis').textContent = state.collis.filter(c=>c.status!=='geliefert').length;
+  document.getElementById('dash-colli-wert').textContent = state.collis.reduce((s,c)=>s+c.menge,0).toFixed(1)+' Einheiten';
+  document.getElementById('dash-lager').textContent = state.lager.length;
+
+  const cap = state.lager.reduce((s,l)=>s+l.cap,0);
+  const used = state.lager.reduce((s,l)=>s+l.bestand,0);
+  const pct = cap>0?Math.round(used/cap*100):0;
+  document.getElementById('dash-lager-fill').textContent = pct+'% belegt';
+
+  const einnahmen = state.transaktionen.filter(t=>t.typ==='einnahme').reduce((s,t)=>s+t.betrag,0);
+  const ausgaben = state.transaktionen.filter(t=>t.typ==='ausgabe').reduce((s,t)=>s+t.betrag,0);
+  document.getElementById('dash-gewinn').textContent = '€'+(einnahmen-ausgaben).toFixed(0);
+  document.getElementById('dash-umsatz').textContent = 'Umsatz €'+einnahmen.toFixed(0);
+
+  // Ernte
+  const ernteEl = document.getElementById('dash-ernte-list');
+  const bereit = state.felder.filter(f=>f.status==='bereit'||f.status==='angebaut');
+  if(!bereit.length) ernteEl.innerHTML='<div class="empty-state">Keine aktiven Felder</div>';
+  else ernteEl.innerHTML = bereit.map(f=>`
+    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+      <div><b>Feld ${f.nr}</b> ${f.name||''}</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span class="tag">${f.frucht}</span>
+        <span class="badge ${f.status==='bereit'?'badge-gold':'badge-green'}">${f.status}</span>
+      </div>
+    </div>`).join('');
+
+  // Warnungen
+  const warnEl = document.getElementById('dash-warnings');
+  const warns = [];
+  state.lager.forEach(l=>{const p=l.bestand/l.cap; if(p>0.9) warns.push(`⚠️ ${l.name} fast voll (${Math.round(p*100)}%)`);});
+  state.felder.forEach(f=>{if(f.duenger<50) warns.push(`🌱 Feld ${f.nr} braucht Dünger (${f.duenger}%)`);});
+  if(!warns.length) warnEl.innerHTML='<div style="color:var(--green-light)">✅ Alles in Ordnung</div>';
+  else warnEl.innerHTML = warns.map(w=>`<div style="padding:6px 0;border-bottom:1px solid var(--border);font-size:13px">${w}</div>`).join('');
+
+  // Lager Quick
+  const lagEl = document.getElementById('dash-lager-ov');
+  if(!state.lager.length) lagEl.innerHTML='<div class="empty-state">Keine Lager</div>';
+  else lagEl.innerHTML = state.lager.slice(0,4).map(l=>{
+    const p=l.cap>0?Math.round(l.bestand/l.cap*100):0;
+    return `<div style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;font-size:12px"><span>${l.name}</span><b>${l.bestand.toFixed(0)}/${l.cap}t</b></div>
+      <div class="colli-bar-wrap"><div class="colli-bar" style="width:${p}%;background:${p>90?'var(--red)':p>70?'var(--orange)':'var(--green)'}"></div></div>
+    </div>`;}).join('');
+
+  // Finanz Quick
+  const finEl = document.getElementById('dash-fin-quick');
+  const last5 = [...state.transaktionen].reverse().slice(0,5);
+  if(!last5.length) finEl.innerHTML='<div class="empty-state">Keine Buchungen</div>';
+  else finEl.innerHTML = last5.map(t=>`
+    <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px">
+      <span>${t.desc.substring(0,22)}</span>
+      <b class="${t.typ==='einnahme'?'fin-positive':'fin-negative'}">${t.typ==='einnahme'?'+':'-'}€${t.betrag.toFixed(0)}</b>
+    </div>`).join('');
+}
+
+// ══════════════════════════ AKTIVITÄTEN ══════════════════════════
+let aktivitaeten = [];
+function logActivity(msg) {
+  const now = new Date();
+  aktivitaeten.unshift({ msg, time: now.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}) });
+  if(aktivitaeten.length>30) aktivitaeten=aktivitaeten.slice(0,30);
+}
+function renderAktivitaeten() {
+  const el = document.getElementById('dash-aktivitaeten');
+  if(!aktivitaeten.length) { el.innerHTML='<div class="empty-state">Keine Aktivitäten</div>'; return; }
+  el.innerHTML = aktivitaeten.slice(0,8).map(a=>
+    `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px">
+      <span>${a.msg}</span><span style="color:var(--text-dim)">${a.time}</span>
+    </div>`).join('');
+}
+
+// ══════════════════════════ HEADER UPDATE ══════════════════════════
+function updateHeader() {
+  document.getElementById('hdr-year').textContent = 'Jahr '+state.settings.year;
+  document.getElementById('hdr-season').textContent = state.settings.season;
+  updateFinStats();
+}
+
+// ══════════════════════════ EXPORT / IMPORT ══════════════════════════
+function dlFile(name, content, type) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([content],{type}));
+  a.download = name; a.click();
+}
+function exportData() {
+  dlFile('ls25farm_backup.json', JSON.stringify(state,null,2), 'application/json');
+  toast('Export gespeichert ✓');
+}
+function importData(event) {
+  const file = event.target.files[0];
+  if(!file) return;
+  const r = new FileReader();
+  r.onload = e => {
+    try {
+      state = JSON.parse(e.target.result);
+      save(); renderAll(); loadSettings(); renderFruchtListe(); renderProduktListe();
+      toast('Import erfolgreich ✓','gold');
+    } catch(err) { toast('Import-Fehler: ungültige Datei','red'); }
+  };
+  r.readAsText(file);
+}
+function resetData() {
+  localStorage.removeItem('ls25fm');
+  location.reload();
+}
+
+// ══════════════════════════ RENDER ALL ══════════════════════════
+function renderAll() {
+  renderDashboard();
+  renderAktivitaeten();
+  renderFelder();
+  renderFF();
+  renderLager();
+  renderCollis();
+  renderScanLog();
+  renderTransaktionen();
+  renderKredite();
+  renderWiederk();
+  renderStats();
+  updateHeader();
+}
+
+// ══════════════════════════ INIT ══════════════════════════
+load();
+loadSettings();
+renderFruchtListe();
+renderProduktListe();
+populateSelects();
+renderAll();
+
+// Kredit-Preview
+document.querySelectorAll('#k-betrag, #k-zins, #k-laufzeit').forEach(el => {
+  el.addEventListener('input', () => {
+    const b = parseFloat(document.getElementById('k-betrag').value)||0;
+    const z = parseFloat(document.getElementById('k-zins').value)||0;
+    const l = parseInt(document.getElementById('k-laufzeit').value)||1;
+    const total = b*(1+z/100*l);
+    const rate = total/l;
+    document.getElementById('k-preview').textContent =
+      `📊 Gesamtkosten: €${total.toFixed(0)} · Jahresrate: €${rate.toFixed(0)} · Zinsen: €${(total-b).toFixed(0)}`;
+  });
+});
+</script>
+</body>
+</html>
